@@ -26,6 +26,14 @@ const typeDefs = `
         deletedAt: Date
     }
 
+    type LoginResponse {
+        uuid: ID!
+        email: String!
+        role: String!
+        username: String!
+        password: String!
+    }
+
     type Query {
         users: [User!]
         user(uuid: ID!): User
@@ -41,6 +49,11 @@ const typeDefs = `
         firstname: String!
         lastname: String!
         ): User!
+
+        login(
+            username: String!
+            password: String!
+        ): LoginResponse 
     }
 `;
 
