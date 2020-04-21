@@ -2,9 +2,11 @@
 import { find, filter } from 'lodash';
 import { v4 as uuidv4 } from 'uuid';
 import bcrypt from 'bcrypt';
-import { sign } from 'jsonwebtoken';
+import jwt, { sign } from 'jsonwebtoken';
+// import jwt from 'jsonwebtoken';
 import slugify from 'slugify';
 import models from '../models/sql';
+import { ACCESS_TOKEN_SECRET, REFRESH_TOKEN_SECRET } from './constants';
 
 export default {
   Query: {
@@ -26,7 +28,7 @@ export default {
       });
       return true;
     }),
-    login: async (parent, { username, password }) => {
+    login: async (parent, { username, password }, { res }) => {
       const user = await models.User.findOne({ where: { username } });
       if (!user) {
         throw new Error('No user with username');
@@ -35,11 +37,28 @@ export default {
       if (!valid) {
         throw new Error('Incorrect password');
       }
-      // return user;
+      const refreshToken = sign(
+        { uuid: user.uuid },
+        REFRESH_TOKEN_SECRET,
+        {
+          expiresIn: '7d',
+        },
+      );
+      const accessToken = sign({ uuid: user.uuid }, ACCESS_TOKEN_SECRET, {
+        expiresIn: '15min',
+      });
+
+      res.cookie('refresh-token', refreshToken);
+      res.cookie('access-token', accessToken);
+
+      return user;
+      /*
+      return user;
       return jwt.sign({
         uuid: user.uuid,
         username: user.username,
-      }, process.env.JWT_SECRET, { expiresIn: '1y' });
+      }, 'asdsadsadhasjdashbdasd7asdasghjd', { expiresIn: '1y' });
+      */
     },
   },
 };

@@ -52,7 +52,17 @@ export const initializeExpressApp = () => {
     context: ({ req, res }) => ({
       req,
       res,
+      context: ({ req, res }) => ({ req, res }),
     }),
+  });
+
+  app.use((req, res, next) => {
+    const accessToken = req.cookies["access-token"];
+    try {
+      const data = verify(accessToken, ACCESS_TOKEN_SECRET);
+      (req).uuid = data.uuid;
+    } catch {}
+    next();
   });
 
   server.applyMiddleware({ app, path: '/graphql' });
