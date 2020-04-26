@@ -1,9 +1,7 @@
-import graphqlRouter from './graphql';
 import accountsRouter from './accounts';
 
 export const initializeRoutes = (app) => {
-  //app.use('/graphql', graphqlRouter);
-  app.use('/accounts', accountsRouter);
+  // app.use('/accounts', accountsRouter);
 };
 
 export const initializeErrorRoutes = (app) => {

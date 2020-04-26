@@ -1,4 +1,3 @@
-/* eslint-disable import/no-unresolved */
 import express from 'express';
 import path from 'path';
 import cookieParser from 'cookie-parser';
@@ -6,19 +5,17 @@ import logger from 'morgan';
 import bodyParser from 'body-parser';
 import cors from 'cors';
 import expressSession from 'express-session';
+import isAuth from '../middlewares/auth';
+import jwt, { verify } from 'jsonwebtoken';
 import {
   ApolloServer,
   AuthenticationError,
 } from 'apollo-server-express';
+import { ACCESS_TOKEN_SECRET } from '../graphql/constants';
 
-
-// import schema from '../schema';
-// import resolvers from '../resolvers';
-// eslint-disable-next-line import/extensions
-// import models from '../models/sql';
-
-import typeDefs from '../data/schema';
-import resolvers from '../data/resolvers';
+import typeDefs from '../graphql/schema';
+import resolvers from '../graphql/resolvers';
+import models from '../models/sql';
 
 export const initializeExpressApp = () => {
   const app = express();
@@ -26,7 +23,27 @@ export const initializeExpressApp = () => {
   app.set('views', path.join(__dirname, ''));
   app.set('view engine', 'jade');
 
-  app.use(cors());
+  const corsOptions = {
+    credentials: true,
+    origin: ['http://localhost:3001',
+      'http://localhost:3000',
+      'http://localhost:3001/graphql'],
+  };
+
+  const addUser = async (req) => {
+    const token = req.headers.authorization;
+    try {
+      const { user } = await jwt.verify(token, ACCESS_TOKEN_SECRET);
+      req.user = user;
+    } catch (err) {
+      console.log(err);
+    }
+    req.next();
+  };
+
+
+  app.use(cors(corsOptions));
+  app.use(isAuth);
   app.use(logger('dev'));
   app.use(express.json());
   app.use(express.urlencoded({ extended: false }));
@@ -49,10 +66,12 @@ export const initializeExpressApp = () => {
     typeDefs,
     resolvers,
     formatError: (error) => error,
-    context: ({ req, res }) => ({
+    context: ({ req, res, context }) => ({
       req,
       res,
-      context: ({ req, res }) => ({ req, res }),
+      context: ({ req }) => ({
+        user: req.user
+      }),
     }),
   });
 
@@ -60,7 +79,7 @@ export const initializeExpressApp = () => {
     const accessToken = req.cookies["access-token"];
     try {
       const data = verify(accessToken, ACCESS_TOKEN_SECRET);
-      (req).uuid = data.uuid;
+      (req).userId = data.userId;
     } catch {}
     next();
   });

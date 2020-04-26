@@ -17,8 +17,8 @@ const typeDefs = `
     }
 
     type Post {
-        id: ID!
-        users_uuid: ID!
+        id: ID
+        users_uuid: ID
         post_title: String!
         post: String!
         createdAt: Date
@@ -27,16 +27,18 @@ const typeDefs = `
     }
 
     type LoginResponse {
-        uuid: ID!
-        email: String!
-        role: String!
-        username: String!
-        password: String!
+        uuid: ID
+        email: String
+        role: String
+        username: String
+        password: String
     }
 
     type Query {
         users: [User!]
         user(uuid: ID!): User
+        posts: [Post!]
+        post(users_uuid: ID!): [Post]
     }
 
     type Mutation {
@@ -53,7 +55,19 @@ const typeDefs = `
         login(
             username: String!
             password: String!
-        ): LoginResponse 
+        ): LoginResponse!
+
+        logout: Boolean
+
+        postCreate(
+          id: ID
+          users_uuid: ID!
+          post_title: String!
+          post: String!
+          createdAt: Date
+          updatedAt: Date
+          deletedAt: Date
+        ): Post!
     }
 `;
 
